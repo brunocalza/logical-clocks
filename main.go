@@ -35,9 +35,15 @@ func (event *Event) Log() {
 	}
 }
 
+type ChannelKey string
+
+func NewChannelKey(source Id, destination Id) ChannelKey {
+	return ChannelKey(fmt.Sprint(source) + "_" + fmt.Sprint(destination))
+}
+
 type Clock struct {
 	id        Id
-	channels  map[string](chan Timestamp)
+	channels  map[ChannelKey](chan Timestamp)
 	events    chan Event
 	timestamp Timestamp
 }
@@ -48,15 +54,14 @@ func (clock *Clock) Local() {
 }
 
 func (clock *Clock) Recv(source Id) {
-	channel := fmt.Sprint(source) + "_" + fmt.Sprint(clock.id)
-	clock.timestamp = max(clock.timestamp, <-clock.channels[channel]) + 1
+	receivedTimestamp := <-clock.channels[NewChannelKey(source, clock.id)]
+	clock.timestamp = max(clock.timestamp, receivedTimestamp) + 1
 	clock.events <- Event{Receive, clock.timestamp, clock.id, &source, &clock.id}
 }
 
 func (clock *Clock) Send(destination Id) {
 	clock.timestamp++
-	channel := fmt.Sprint(clock.id) + "_" + fmt.Sprint(destination)
-	clock.channels[channel] <- clock.timestamp
+	clock.channels[NewChannelKey(clock.id, destination)] <- clock.timestamp
 	clock.events <- Event{Send, clock.timestamp, clock.id, &clock.id, &destination}
 }
 
@@ -88,15 +93,13 @@ func main() {
 
 	processes := []func(*Clock){p0, p1, p2}
 
-	channels := make(map[string](chan Timestamp))
+	channels := make(map[ChannelKey](chan Timestamp))
 	for _, combination := range combinations([]int{0, 1, 2}, 2) {
-		source := combination[0]
-		destination := combination[1]
-		key := fmt.Sprint(source) + "_" + fmt.Sprint(destination)
-		reversedKey := fmt.Sprint(destination) + "_" + fmt.Sprint(source)
+		source := Id(combination[0])
+		destination := Id(combination[1])
 
-		channels[key] = make(chan Timestamp, 10)
-		channels[reversedKey] = make(chan Timestamp, 10)
+		channels[NewChannelKey(source, destination)] = make(chan Timestamp, 10)
+		channels[NewChannelKey(destination, source)] = make(chan Timestamp, 10)
 	}
 	events := make(chan Event)
 
@@ -115,8 +118,8 @@ func main() {
 			event.Log()
 		}
 	}()
-
 	wg.Wait()
+
 	for _, channel := range channels {
 		close(channel)
 	}
