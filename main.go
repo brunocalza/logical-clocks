@@ -9,8 +9,8 @@ type EventType int
 
 const (
 	Local EventType = iota
-	Send
-	Receive
+	Sent
+	Received
 )
 
 type Timestamp uint32
@@ -27,11 +27,11 @@ type Event struct {
 func (event *Event) Log() {
 	switch event.kind {
 	case Local:
-		fmt.Printf("local %d nil nil %d\n", event.owner, event.timestamp)
-	case Send:
-		fmt.Printf("send %d %d %d %d\n", event.owner, *event.source, *event.destination, event.timestamp)
-	case Receive:
-		fmt.Printf("receive %d %d %d %d\n", event.owner, *event.source, *event.destination, event.timestamp)
+		fmt.Printf("local %d NaN NaN %d\n", event.owner, event.timestamp)
+	case Sent:
+		fmt.Printf("sent %d %d %d %d\n", event.owner, *event.source, *event.destination, event.timestamp)
+	case Received:
+		fmt.Printf("received %d %d %d %d\n", event.owner, *event.source, *event.destination, event.timestamp)
 	}
 }
 
@@ -56,13 +56,13 @@ func (clock *Clock) Local() {
 func (clock *Clock) Recv(source Id) {
 	receivedTimestamp := <-clock.channels[NewChannelKey(source, clock.id)]
 	clock.timestamp = max(clock.timestamp, receivedTimestamp) + 1
-	clock.events <- Event{Receive, clock.timestamp, clock.id, &source, &clock.id}
+	clock.events <- Event{Received, clock.timestamp, clock.id, &source, &clock.id}
 }
 
 func (clock *Clock) Send(destination Id) {
 	clock.timestamp++
 	clock.channels[NewChannelKey(clock.id, destination)] <- clock.timestamp
-	clock.events <- Event{Send, clock.timestamp, clock.id, &clock.id, &destination}
+	clock.events <- Event{Sent, clock.timestamp, clock.id, &clock.id, &destination}
 }
 
 func main() {

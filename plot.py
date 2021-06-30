@@ -1,37 +1,25 @@
 import matplotlib.pyplot as plt
 import string
+import pandas as pd
+import sys
 
 class Event:
 
-    def __init__(self, kind, owner, src, dst, timestamp):
+    def __init__(self, kind, owner, source, destination, timestamp):
         self.kind = kind
         self.owner = owner
-        self.src = src
-        self.dst = dst
+        self.source = source
+        self.destination = destination
         self.timestamp = timestamp
 
-data = """local 2 -1 -1 1
-send 2 2 1 2
-send 0 0 1 1
-send 1 1 0 1
-send 1 1 2 2
-receive 2 1 2 3
-receive 0 1 0 2
-local 0 -1 -1 3
-receive 1 0 1 3
-local 1 -1 -1 4
-send 1 1 2 5
-send 1 1 0 6
-receive 0 1 0 7
-receive 2 1 2 6
-local 1 -1 -1 7
-receive 1 2 1 8"""
+path = sys.argv[1]
+df = pd.read_csv(path, sep=" ", header=None)
+df.columns = ['Kind', 'Owner', 'Source', 'Destination', 'Timestamp']
 
-events = list(map(lambda x : x.split(' '),  data.split("\n")))   
-events = list(map(lambda x : Event(x[0], int(x[1]), int(x[2]), int(x[3]),  int(x[4])), events))
+events = [(Event(row.Kind, row.Owner, row.Source, row.Destination, row.Timestamp)) for index, row in df.iterrows() ]
 events.sort(key = lambda e : e.timestamp)
-maxTimestamp = events[-1].timestamp
 
+maxTimestamp = events[-1].timestamp
 numThreads = len({e.owner for e in events}) # numThreads is the number of distinct owners (processes)
 
 # horizontal lines
@@ -62,10 +50,10 @@ while len(events) > 0:
 
     if e.kind == 'local':
         plt.scatter([e.owner + 1], [e.timestamp], c = "k")
-    elif e.kind == 'send':
+    elif e.kind == 'sent':
         s = e
         (x0, y0) = (s.owner + 1, s.timestamp)
-        r = next(e for e in events if e.kind == 'receive' and e.src == s.src)
+        r = next(e for e in events if e.kind == 'received' and e.source == s.source)
         (x1, y1)  = (r.owner + 1, r.timestamp)
         plt.scatter([x0, x1], [y0, y1], c = "k")
         plt.plot([x0, x1], [y0, y1])
