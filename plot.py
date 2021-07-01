@@ -66,7 +66,7 @@ while len(events) > 0:
     elif e.kind == 'sent':
         s = e
         (x0, y0) = (s.owner + 1, s.timestamp)
-        r = next(e for e in events if e.kind == 'received' and e.source == s.source)
+        r = next(e for e in events if e.kind == 'received' and e.source == s.source and e.destination == s.destination)
         (x1, y1)  = (r.owner + 1, r.timestamp)
         plt.scatter([x0, x1], [y0, y1], c = "k")
         plt.plot([x0, x1], [y0, y1])
