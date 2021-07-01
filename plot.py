@@ -1,3 +1,5 @@
+#! /usr/bin/python
+
 import matplotlib.pyplot as plt
 import string
 import pandas as pd
@@ -12,11 +14,22 @@ class Event:
         self.destination = destination
         self.timestamp = timestamp
 
-path = sys.argv[1]
-df = pd.read_csv(path, sep=" ", header=None)
-df.columns = ['Kind', 'Owner', 'Source', 'Destination', 'Timestamp']
+events = []
+if len(sys.argv) > 1:
+    path = sys.argv[1]
+    df = pd.read_csv(path, sep=" ", header=None)
+    df.columns = ['Kind', 'Owner', 'Source', 'Destination', 'Timestamp']
 
-events = [(Event(row.Kind, row.Owner, row.Source, row.Destination, row.Timestamp)) for index, row in df.iterrows() ]
+    events = [Event(row.Kind, row.Owner, row.Source, row.Destination, row.Timestamp) for index, row in df.iterrows() ]
+    print(events)
+else:
+    for line in sys.stdin:
+        splittedLine = line.split(' ')
+        events.append(Event(splittedLine[0], int(splittedLine[1]), splittedLine[2] if splittedLine[2] == 'NaN' else int(splittedLine[2]), splittedLine[3] if splittedLine[3] == 'NaN' else int(splittedLine[3]), int(splittedLine[4])))
+
+if len(events) == 0:
+    sys.exit(0)
+
 events.sort(key = lambda e : e.timestamp)
 
 maxTimestamp = events[-1].timestamp
@@ -62,4 +75,4 @@ while len(events) > 0:
         pass
 
 plt.axis("off")
-plt.savefig("clock.png", bbox_inches="tight")
+plt.show()
