@@ -1,8 +1,13 @@
 package examples
 
-import "github.com/brunocalza/logical-clocks/lamport"
+import "github.com/brunocalza/logical-clocks/lc"
 
-type Examples map[string](func() []func(*lamport.Clock))
+type Example struct {
+	Clock     lc.ClockType
+	Processes []func(lc.Clock)
+}
+
+type Examples map[string](func() Example)
 
 func List() Examples {
 	return Examples{

@@ -5,22 +5,22 @@ import (
 	"sync"
 
 	"github.com/brunocalza/logical-clocks/examples"
-	"github.com/brunocalza/logical-clocks/lamport"
+	"github.com/brunocalza/logical-clocks/lc"
 )
 
 func main() {
 	exampleName := os.Args[1]
-	processes := examples.List()[exampleName]()
-	channels := generateChannels(processes)
-	events := make(chan lamport.Event)
+	example := examples.List()[exampleName]()
+	channels := generateChannels(example.Processes)
+	events := make(chan lc.Event)
 
 	// Execute all processes concurrently. Each process has its own clock
 	wg1 := &sync.WaitGroup{}
-	for i := 0; i < len(processes); i++ {
+	for i := 0; i < len(example.Processes); i++ {
 		wg1.Add(1)
 		go func(i int) {
-			clock := &lamport.Clock{lamport.Id(i), channels, events, 0}
-			processes[i](clock)
+			clock := lc.NewClock(example.Clock, lc.Identifier(i), channels, events)
+			example.Processes[i](clock)
 			wg1.Done()
 		}(i)
 	}
@@ -44,14 +44,14 @@ func main() {
 }
 
 // Generates all combinations of channels necessary for communication among processes
-func generateChannels(processes []func(*lamport.Clock)) map[lamport.ChannelKey](chan lamport.Timestamp) {
-	channels := make(map[lamport.ChannelKey](chan lamport.Timestamp))
+func generateChannels(processes []func(lc.Clock)) map[lc.ChannelKey](chan lc.Timestamp) {
+	channels := make(map[lc.ChannelKey](chan lc.Timestamp))
 	for _, combination := range combinations(len(processes)) {
-		source := lamport.Id(combination[0])
-		destination := lamport.Id(combination[1])
+		source := lc.Identifier(combination[0])
+		destination := lc.Identifier(combination[1])
 
-		channels[lamport.NewChannelKey(source, destination)] = make(chan lamport.Timestamp, 100)
-		channels[lamport.NewChannelKey(destination, source)] = make(chan lamport.Timestamp, 100)
+		channels[lc.NewChannelKey(source, destination)] = make(chan lc.Timestamp, 100)
+		channels[lc.NewChannelKey(destination, source)] = make(chan lc.Timestamp, 100)
 	}
 	return channels
 }
