@@ -16,5 +16,8 @@ func List() Examples {
 		"Example3": Example3,
 		"Example4": Example4,
 		"Example5": Example5,
+		"Example6": Example6,
+		"Example7": Example7,
+		"Example8": Example8,
 	}
 }
