@@ -2,7 +2,7 @@
 
 ## Description
 
-This is an educational tool that implements Lamport Clocks and Vector Clocks and helps you visualize a flow of events defined by the user. You can learn the theory about Logical Clocks at [Getting To Know Logical Clocks By Implementing Them](https://brunocalza.me/getting-to-know-logical-clocks-by-implementing-them/).
+This is an educational tool that implements Lamport Clocks and Vector Clocks and helps you visualize a flow of events defined by the user. You can learn the theory about Logical Clocks at [Getting To Know Logical Clocks By Implementing Them](https://brunocalza.me/getting-to-know-logical-clocks-by-implementing-them/). This is highly inspired in [mwhittaker/clocks](https://github.com/mwhittaker/clocks).
 
 ## How to use this tool
 
