@@ -28,9 +28,9 @@ events = []
 if len(sys.argv) > 1:
     path = sys.argv[1]
     df = pd.read_csv(path, sep=" ", header=None)
-    df.columns = ['Kind', 'Owner', 'Source', 'Destination', 'Timestamp']
+    df.columns = ['Kind', 'Owner', 'Source', 'Destination', 'T1', 'T2', 'T3']
 
-    events = [Event(row.Kind, row.Owner, row.Source, row.Destination, row.Timestamp) for index, row in df.iterrows() ]
+    events = [Event(row.Kind, row.Owner, row.Source, row.Destination, [row.T1, row.T2, row.T3]) for index, row in df.iterrows() ]
 else:
     for line in sys.stdin:
         splittedLine = line.split(' ')
@@ -72,7 +72,7 @@ for t in range(1, maxTimestamp + 1):
 # event labels
 for i in range(numThreads):
     for (j, e) in enumerate(filter(lambda e: e.owner == i, events)):
-        plt.text(e.owner - 0.275 * math.log(1 + len(e.timestamp), 2) + 1, e.ownerTimestamp() + 0.1, "$({},{})$".format(",".join(map(str, e.timestamp)), string.ascii_uppercase[i]))
+        plt.text(e.owner - 0.275 * math.log(1 + len(e.timestamp), 2) + 1, e.maxTimestamp() + 0.1, "$({},{})$".format(",".join(map(str, e.timestamp)), string.ascii_uppercase[i]))
 
 # events
 while len(events) > 0:
@@ -84,14 +84,14 @@ while len(events) > 0:
         s = e
         (x0, y0) = (s.owner + 1, s.ownerTimestamp())
         r = next(e for e in events if e.kind == 'received' and e.source == s.source and e.destination == s.destination)
-        (x1, y1)  = (r.owner + 1, r.ownerTimestamp())
+        (x1, y1)  = (r.owner + 1, r.maxTimestamp())
         
         if y0 != y1:
             plt.scatter([x0, x1], [y0, y1], c = "k")
             plt.plot([x0, x1], [y0, y1])
         else:
-            plt.scatter([x0, x1], [y0, y1 + 0.15], c = "k")
-            plt.plot([x0, x1], [y0, y1 + 0.15])
+            plt.scatter([x0, x1], [y0, y1 + 0.2], c = "k")
+            plt.plot([x0, x1], [y0, y1 + 0.2])
         events.remove(r)
     else:
         pass
