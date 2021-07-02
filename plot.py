@@ -72,7 +72,9 @@ for t in range(1, maxTimestamp + 1):
 # event labels
 for i in range(numThreads):
     for (j, e) in enumerate(filter(lambda e: e.owner == i, events)):
-        plt.text(e.owner - 0.275 * math.log(1 + len(e.timestamp), 2) + 1, e.maxTimestamp() + 0.1, "$({},{})$".format(",".join(map(str, e.timestamp)), string.ascii_uppercase[i]))
+        label = "$({},{})$".format(e.timestamp[0], string.ascii_uppercase[i]) if len(e.timestamp) == 1 else "$({})$".format(",".join(map(str, e.timestamp)))
+        offset = 0.725 if len(e.timestamp) == 1 else - 0.275 * (0.75 * len(e.timestamp) - 4.35)
+        plt.text(e.owner + offset, e.maxTimestamp() + 0.1, label)
 
 # events
 while len(events) > 0:
