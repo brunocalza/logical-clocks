@@ -9,26 +9,20 @@ type VectorClock struct {
 
 func (clock *VectorClock) Local() {
 	clock.Timestamp[clock.ID]++
-	timestampCopy := append(make([]Timestamp, 0, len(clock.Timestamp)), clock.Timestamp...)
-	clock.Events <- Event{Vector, Local, timestampCopy, clock.ID, nil, nil}
+	clock.Events <- Event{Vector, Local, copyTimestamp(clock.Timestamp), clock.ID, nil, nil}
 }
 
 func (clock *VectorClock) Recv(source Identifier) {
 	receivedTimestamp := <-clock.Channels[NewChannelKey(source, clock.ID)]
-	//fmt.Println("Recv", clock.ID, source, clock.Timestamp, receivedTimestamp)
 	clock.Timestamp = maxVector(clock.Timestamp, receivedTimestamp)
 	clock.Timestamp[clock.ID]++
-	timestampCopy := append(make([]Timestamp, 0, len(clock.Timestamp)), clock.Timestamp...)
-	clock.Events <- Event{Vector, Received, timestampCopy, clock.ID, &source, &clock.ID}
+	clock.Events <- Event{Vector, Received, copyTimestamp(clock.Timestamp), clock.ID, &source, &clock.ID}
 }
 
 func (clock *VectorClock) Send(destination Identifier) {
 	clock.Timestamp[clock.ID]++
-	timestampCopy := append(make([]Timestamp, 0, len(clock.Timestamp)), clock.Timestamp...)
-	clock.Channels[NewChannelKey(clock.ID, destination)] <- timestampCopy
-
-	//fmt.Println("Send", clock.ID, destination, timestampCopy)
-	clock.Events <- Event{Vector, Sent, timestampCopy, clock.ID, &clock.ID, &destination}
+	clock.Channels[NewChannelKey(clock.ID, destination)] <- copyTimestamp(clock.Timestamp)
+	clock.Events <- Event{Vector, Sent, copyTimestamp(clock.Timestamp), clock.ID, &clock.ID, &destination}
 }
 
 func maxVector(a []Timestamp, b []Timestamp) []Timestamp {
@@ -37,4 +31,8 @@ func maxVector(a []Timestamp, b []Timestamp) []Timestamp {
 		result[i] = maxTimestamp(a[i], b[i])
 	}
 	return result
+}
+
+func copyTimestamp(a []Timestamp) []Timestamp {
+	return append(make([]Timestamp, 0, len(a)), a...)
 }
